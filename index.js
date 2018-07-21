@@ -258,15 +258,19 @@ function format (obj) {
  * Decode a RFC 6987 field value (gracefully).
  *
  * @param {string} str
- * @return {string}
+ * @return {?string}
  * @private
  */
 
-function decodefield (str) {
+function decodefield (str, strict) {
   var match = EXT_VALUE_REGEXP.exec(str)
 
   if (!match) {
-    throw new TypeError('invalid extended field value')
+    if (strict) {
+      throw new TypeError('invalid extended field value')
+    } else {
+      return null
+    }
   }
 
   var charset = match[1].toLowerCase()
@@ -284,7 +288,11 @@ function decodefield (str) {
       value = Buffer.from(binary, 'binary').toString('utf8')
       break
     default:
-      throw new TypeError('unsupported charset in extended field')
+      if (strict) {
+        throw new TypeError('unsupported charset in extended field')
+      } else {
+        return null
+      }
   }
 
   return value
@@ -307,11 +315,13 @@ function getlatin1 (val) {
  * Parse Content-Disposition header string.
  *
  * @param {string} string
+ * @param {object} [options]
+ * @param {boolean} [options.strict=true]
  * @return {object}
  * @public
  */
 
-function parse (string) {
+function parse (string, options) {
   if (!string || typeof string !== 'string') {
     throw new TypeError('argument string is required')
   }
@@ -320,6 +330,17 @@ function parse (string) {
 
   if (!match) {
     throw new TypeError('invalid type format')
+  }
+
+  // get and check options
+  var opts = options || {}
+  if (opts.strict !== undefined && typeof opts.strict !== 'boolean') {
+    throw new TypeError('options.strict must be a boolean')
+  }
+
+  var strict = true
+  if (opts.strict !== undefined) {
+    strict = opts.strict
   }
 
   // normalize type
@@ -355,10 +376,12 @@ function parse (string) {
     if (key.indexOf('*') + 1 === key.length) {
       // decode extended value
       key = key.slice(0, -1)
-      value = decodefield(value)
+      value = decodefield(value, strict)
 
-      // overwrite existing value
-      params[key] = value
+      // overwrite existing value only if parse successfully
+      if (value != null) {
+        params[key] = value
+      }
       continue
     }
 

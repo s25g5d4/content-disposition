@@ -68,24 +68,33 @@ Specifies the disposition type, defaults to `"attachment"`. This can also be
 `attachment`, but can convey additional information if both parties agree to
 it). The type is normalized to lower-case.
 
-### contentDisposition.parse(string)
+### contentDisposition.parse(string, options)
 
 <!-- eslint-disable no-undef, no-unused-vars -->
 
 ```js
-var disposition = contentDisposition.parse('attachment; filename="EURO rates.txt"; filename*=UTF-8\'\'%e2%82%ac%20rates.txt')
+var disposition = contentDisposition.parse('attachment; filename="EURO rates.txt"; filename*=UTF-8\'\'%e2%82%ac%20rates.txt', { strict: true })
 ```
 
-Parse a `Content-Disposition` header string. This automatically handles extended
-("Unicode") parameters by decoding them and providing them under the standard
-parameter name. This will return an object with the following properties (examples
-are shown for the string `'attachment; filename="EURO rates.txt"; filename*=UTF-8\'\'%e2%82%ac%20rates.txt'`):
+Parse a `Content-Disposition` header string. The `options` is optional. This
+automatically handles extended ("Unicode") parameters by decoding them and providing
+them under the standard parameter name. This will return an object with the following
+properties (examples are shown for the string `'attachment; filename="EURO rates.txt"; filename*=UTF-8\'\'%e2%82%ac%20rates.txt'`):
 
  - `type`: The disposition type (always lower case). Example: `'attachment'`
 
  - `parameters`: An object of the parameters in the disposition (name of parameter
    always lower case and extended versions replace non-extended versions). Example:
    `{filename: "€ rates.txt"}`
+
+#### Options
+
+`contentDisposition.parse` accepts these properties in the options object.
+
+##### Strict
+
+When set to `false`, any parsing error in extended parameters will be ignored and
+the value will not be used. Defaults to `true`.
 
 ## Examples
 
